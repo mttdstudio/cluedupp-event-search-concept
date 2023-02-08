@@ -124,7 +124,7 @@
               countries[country].push(item)
             })
 
-            console.log('🚀 ~ sheet.forEach ~ sheet', sheet);
+            // console.log('🚀 ~ sheet.forEach ~ sheet', sheet);
 
             let choicesCities = new Choices(this.$refs.cities);
             let choicesCountries = new Choices(this.$refs.countries);
@@ -152,7 +152,8 @@
             for (const [key, value] of Object.entries(countries)) {
               this.optionsCountries.push({
                 value: key,
-                label: value[0].country
+                label: value[0].country,
+                selected: value[0].country == country || value[0].country == this.value
               });
             }
 
