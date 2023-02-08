@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.11.1/dist/cdn.min.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css" />
+  <script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
+
+  <style>
+    /*
+      1. Use a more-intuitive box-sizing model.
+    */
+    *, *::before, *::after {
+      box-sizing: border-box;
+    }
+    /*
+      2. Remove default margin
+    */
+    * {
+      margin: 0;
+    }
+    /*
+      3. Allow percentage-based heights in the application
+    */
+    html, body {
+      height: 100%;
+    }
+    /*
+      Typographic tweaks!
+      4. Add accessible line-height
+      5. Improve text rendering
+    */
+    body {
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+    }
+    /*
+      6. Improve media defaults
+    */
+    img, picture, video, canvas, svg {
+      display: block;
+      max-width: 100%;
+    }
+    /*
+      7. Remove built-in form typography styles
+    */
+    input, button, textarea, select {
+      font: inherit;
+    }
+    /*
+      8. Avoid text overflows
+    */
+    p, h1, h2, h3, h4, h5, h6 {
+      overflow-wrap: break-word;
+    }
+    .dropdowns {
+      padding: 25px;
+      display: flex;
+      flex-direction: row;
+      gap: 25px;
+    }
+
+    .dropdowns > * {
+      min-width: 500px;
+      height: 46px;
+    }
+  </style>
+
+  <script>
+    /* let handleize = (str) => str.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/-$/, '').replace(/^-/, ''); */
+    let handleize = (str) => str.toLowerCase().replace(/ /g, '-');
+    let country;
+
+    async function checkUserLocation() {
+      let usersCountry = sessionStorage.getItem("usersCountry");
+
+      if (usersCountry === null) {
+        usersCountry = await fetch("https://get.geojs.io/v1/ip/country.json")
+          .then((response) => response.json())
+          .then((code) => {
+            sessionStorage.setItem("usersCountry", code.name);
+
+            return usersCountry;
+          })
+          .catch((err) => console.error(err));
+      }
+
+      country = usersCountry;
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      checkUserLocation();
+    })
+
+    document.addEventListener('alpine:init', () => {
+      let sheet;
+      const countries = [];
+
+      Alpine.data('dropdowns', () => ({
+        value: null,
+        citiesIsDisabled: true,
+        optionsCountries: [],
+        optionsCities: [],
+        init() {
+          this.$nextTick(async () => {
+            let url = 'https://api.sheety.co/654ba0af3567b546e1dc142300c1e3d4/beautyAndTheBeast/sheet1';
+            sheet = await fetch(url)
+              .then((response) => response.json())
+              .then((json) => json.sheet1);
+
+            /* sheet.sheet1 */
+            /* const unique = [...new Set(sheet.map(({ country }) => country))] */
+            /* console.log('🚀 ~ this.$nextTick ~ unique', unique); */
+
+            sheet.forEach((item) => {
+              const country = handleize(item.country);
+              if (countries[country] === undefined) {
+                countries[country] = []
+              }
+
+              countries[country].push(item)
+            })
+
+            console.log('🚀 ~ sheet.forEach ~ sheet', sheet);
+
+            let choicesCities = new Choices(this.$refs.cities);
+            let choicesCountries = new Choices(this.$refs.countries);
+
+            const setCities = (country) => {
+              this.optionsCities = [];
+
+              for (const [key, value] of Object.entries(countries[country])) {
+                const city = handleize(value.city);
+                const option = {
+                  value: key,
+                  label: value.city
+                }
+
+                this.optionsCities.push(option);
+              }
+
+              // const newArray = Array.from(new Set(this.optionsCities.map((item) => item.value)))
+              this.optionsCities = this.optionsCities.filter((a, i) => this.optionsCities.findIndex((s) => a.label === s.label) === i)
+
+              choicesCities.clearStore();
+              choicesCities.setChoices(this.optionsCities);
+            }
+
+            for (const [key, value] of Object.entries(countries)) {
+              this.optionsCountries.push({
+                value: key,
+                label: value[0].country
+              });
+            }
+
+            // choicesCountries.clearStore();
+            choicesCountries.setChoices(this.optionsCountries);
+
+            this.$refs.countries.addEventListener('change', () => {
+              const value = choicesCountries.getValue(true);
+
+              this.value = value;
+              this.citiesIsDisabled = value === '';
+            })
+
+            this.$watch('value', () => {
+              const value = choicesCountries.getValue(); // Not passing in true as we need the label too
+
+              this.citiesIsDisabled = value.value === '';
+              this.citiesIsDisabled ? choicesCities.disable() : choicesCities.enable();
+
+              setCities(value.value);
+
+              return value.label;
+            });
+          })
+        }
+      }))
+    })
+  </script>
+</head>
+<body>
+  <div class="output"></div>
+
+  <div
+      x-data="dropdowns"
+      class="dropdowns"
+  >
+    <select x-ref="countries"></select>
+    <select x-ref="cities" :disabled="citiesIsDisabled"></select>
+  </div>
+</body>
+</html>
