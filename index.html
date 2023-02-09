@@ -56,16 +56,28 @@
     p, h1, h2, h3, h4, h5, h6 {
       overflow-wrap: break-word;
     }
+
     .dropdowns {
       padding: 25px;
       display: flex;
-      flex-direction: row;
+      flex-direction: column;
       gap: 25px;
     }
 
     .dropdowns > * {
-      min-width: 500px;
+      width: 100%;
       height: 46px;
+      margin-block-end: 0;
+    }
+
+    @media screen and (min-width: 768px) {
+      .dropdowns {
+        flex-direction: row;
+      }
+
+      .dropdowns > * {
+        min-width: 500px;
+      }
     }
   </style>
 
