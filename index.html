@@ -82,7 +82,6 @@
   </style>
 
   <script>
-    /* let handleize = (str) => str.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/-$/, '').replace(/^-/, ''); */
     let handleize = (str) => str.toLowerCase().replace(/ /g, '-');
     let country;
 
@@ -128,10 +127,7 @@
               .then((response) => response.json())
               .then((json) => json.sheet1);
 
-            /* sheet.sheet1 */
-            /* const unique = [...new Set(sheet.map(({ country }) => country))] */
-            /* console.log('🚀 ~ this.$nextTick ~ unique', unique); */
-
+            // Extract location & event date from our Google Sheet
             sheet.forEach((item) => {
               // console.log('🚀 ~ sheet.forEach ~ item', item);
               const country   = handleize(item.country);
@@ -152,14 +148,12 @@
               })
             })
 
-            // console.log('🚀 ~ sheet.forEach ~ sheet', sheet);
-            // console.log('🚀 ~ sheet.forEach ~ countries', countries);
-            // console.log('🚀 ~ sheet.forEach ~ cities', cities);
-
+            // Initiate Choices selects
             let choicesCities = new Choices(this.$refs.cities);
             let choicesCountries = new Choices(this.$refs.countries);
             let choicesDates = new Choices(this.$refs.dates);
 
+            // Build city options according to selected country
             const setCities = (country) => {
               this.optionsCities = [];
 
@@ -179,8 +173,7 @@
               choicesCities.setChoices(this.optionsCities);
             }
 
-            console.log('🚀 ~ setDates ~ cities', cities);
-
+            // Build date options according to selected city
             const setDates = (city) => {
               this.optionsDates = [];
 
@@ -194,14 +187,13 @@
                 this.optionsDates.push(option);
               }
 
-              console.log('🚀 ~ setDates ~ this.optionsDates', this.optionsDates);
-
               this.optionsDates = this.optionsDates.filter((a, i) => this.optionsDates.findIndex((s) => a.label === s.label) === i)
 
               choicesDates.clearStore();
               choicesDates.setChoices(this.optionsDates);
             }
 
+            // Build country list & set option values
             for (const [key, value] of Object.entries(countries)) {
               this.optionsCountries.push({
                 value: key,
@@ -210,8 +202,10 @@
               });
             }
 
+            // Set country options
             choicesCountries.setChoices(this.optionsCountries);
 
+            // Add event listeners
             this.$refs.countries.addEventListener('change', () => {
               const country = choicesCountries.getValue(true);
 
@@ -226,6 +220,7 @@
               this.citiesIsDisabled = city === '';
             })
 
+            // Add watchers
             this.$watch('country', () => {
               const country = choicesCountries.getValue(); // Not passing in true as we need the label too
 
