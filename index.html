@@ -71,6 +71,7 @@
         country: null,
         city: null,
         date: null,
+        eventId: null,
         cityIsDisabled: true,
         stateIsDisabled: true,
         stateIsVisible: false,
@@ -102,7 +103,7 @@
 
               countries[country].push(item)
               cities[city].push({
-                id: item.id,
+                productId: item.productId,
                 date: item.date,
               })
             })
@@ -139,7 +140,7 @@
               for (const [key, value] of Object.entries(cities[city])) {
                 const date = handleize(value.date);
                 const option = {
-                  value: date,
+                  value: value.productId,
                   label: value.date
                 }
 
@@ -183,6 +184,12 @@
 
               this.city = city;
               this.cityIsDisabled = city === '';
+            })
+
+            this.$refs.dates.addEventListener('change', () => {
+              const eventId = choicesDates.getValue(true);
+
+              this.eventId = eventId;
             })
 
             // Add watchers
